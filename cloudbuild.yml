@@ -1,20 +1,26 @@
 steps:
-  - name: "gcr.io/cloud-builders/docker"
-    args:
-      [
-        "build",
-        "-t",
-        "us-east4-docker.pkg.dev/pivotal-data-437717-t8/image-registry/auth-ms",
-        "-f",
-        "dockerfile.prod",
-        "--platform=linux/amd64",
-        ".",
-      ]
-  - name: "gcr.io/cloud-builders/docker"
-    args:
-      [
-        "push",
-        "us-east4-docker.pkg.dev/pivotal-data-437717-t8/image-registry/auth-ms",
-      ]
-options:
-  logging: CLOUD_LOGGING_ONLY
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+    - -c
+    - |
+      docker build -t us-east4-docker.pkg.dev/pivotal-data-437717-t8/image-registry/auth-ms \
+      -f dockerfile.prod \
+      --platform=linux/amd64 \
+      --build-arg AUTH_DATABASE_URL=$$AUTH_DATABASE_URL \
+      --build-arg AUTH_DIRECT_URL_DB=$$AUTH_DIRECT_URL_DB .
+  secretEnv: ['AUTH_DATABASE_URL', 'AUTH_DIRECT_URL_DB']
+
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    [
+      'push',
+      'us-east4-docker.pkg.dev/pivotal-data-437717-t8/image-registry/auth-ms',
+    ]
+
+availableSecrets:
+  secretManager:
+  - versionName: projects/1067950878117/secrets/AUTH_DATABASE_URL/versions/1
+    env: 'AUTH_DATABASE_URL'
+  - versionName: projects/1067950878117/secrets/AUTH_DIRECT_URL_DB/versions/1
+    env: 'AUTH_DIRECT_URL_DB'
